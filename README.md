@@ -24,8 +24,9 @@ O sistema de autorização será composto por três serviços principais:
 
 1. Você deve configurar o arquivo .env corresponde do serviço, por padrao kafka e redis, estao desabilitados, se deseja usar, deve configurar os parametros no .env
    Os parametros KAFKA_ENVIO e REDIS_ENVIO devem estar = true, caso contrario deixe false se só quer testar, nao esqueça de configurar as portas de entrada e saida.
+   
     Exemplo: "autoadmsrvmc"
-     #define configurações de ambiente 
+```{#define configurações de ambiente 
 
 #ip e porta de conexão de entrada e saída
 TCPMCADMEIN=localhost:8080 #porta de entrada
@@ -52,8 +53,10 @@ REDIS_USER=usuario
 REDIS_PASS=usuario-secret
 REDIS_DB=0
 
+```
+
 2. Você precisa executar os serviços autoadmsrvmc e autotrnsrvmc
-   autotrnsrvmc                                                
+  ``` autotrnsrvmc                                                
 2024/10/19 13:41:09 Iniciando Servidor MC v1...
 2024/10/19 13:41:09 Iniciando servidor TCP...
 2024/10/19 13:41:09 Servidor aguardando conexões localhost:8082...
@@ -62,16 +65,18 @@ REDIS_DB=0
 2024/10/19 17:55:50 Iniciando Servidor MC Admninstrativo v1...
 2024/10/19 17:55:50 Conectado ao servidor da bandeira: 192.168.1.214:1002
 2024/10/19 17:55:50 Escutando na porta localhost:8080
-
+```
 autotrnsrvmc deve ser conectado a porta, o qual subiu o autoadmsrvmc, que por sua vez deve estar conectado a bandeira.
 você tambem pode conectar o serviço autotrnsrvmc direto ao servidor da bandeira, porem nao terá o tratamento de mensagens 0800, nem ficará conectado o tempo todo, mas é util se você quiser testar alguma mensagem, visto que tirando a 0800, ele quem tem a logica de tratamento das mensagens MC.
-**NOTA o servidor da Mastercard deve estar preparado para receber mensagens em EBCDIC**
+
+**NOTA: o servidor da Mastercard deve estar preparado para receber mensagens em EBCDIC**
 
 3. Por padrao autotrnsrvmc esta configurado para receber mensagens ISO de entrada, mas você pode mudar no arquivo .env o parametro TIPO_SERVER
-   #define se o servidor vai receber mensagens via tcp ou grcp
+ ```  #define se o servidor vai receber mensagens via tcp ou grcp
 TIPO_SERVER=tcp  # Pode ser "grpc" ou "tcp"
-
+```
 Se for usar o grpc aqui esta um exemplo de proto que você vai precisar carregar.
+```protobuf
 syntax = "proto3";
 
 package transacao;
@@ -117,12 +122,13 @@ message TransacaoResponse {
 service TransacaoService {
     rpc ProcessTransacao(TransacaoRequest) returns (TransacaoResponse);
 }
-**NOTA as mensagens via GRPC ainda nao foram 100% testadas, você pode ter problema, por exemplo, o proto nao nao tem o DE112, que pode dar erro em algumas transaçoes como parcelado emissor.**
+```
+**NOTA: as mensagens via GRPC ainda nao foram 100% testadas, você pode ter problema, por exemplo, o proto nao nao tem o DE112, que pode dar erro em algumas transaçoes como parcelado emissor.**
 
 4. Enviando mensagem, via TCP "ISO8583" formato ASCII Padrao
    Header 2 bytes Binario
      Exemplo: transaçao trila 2 sem senha
-     F0   MTI.............................: 0200
+```F0   MTI.............................: 0200
 F3   CODIGO PROCESSAMENTO............: 3000
 F4   VALOR DA TRANSACAO..............: 1000
 F7   DATA HORA GMT TRANSMISSAO.......: 1018164059
@@ -141,8 +147,8 @@ F43  DADOS EC........................: POSTO DM JR            DIADEMA  EVANG076
 F48  DADOS ADD.......................: 001008000000010020010003001F0210022102200212
 F49  CODIGO DE MOEDA.................: 986
 F61  Point-of-Service [POS] Data.....: ******************************
-
-  Formato:
+```
+ ``` Formato:
   DE03 Numerico tamanho de 6 fixo
   DE04 Numerico tamanho de 12 fixo
   DE07 Numerico tamanho de 10 fixo
@@ -161,17 +167,18 @@ F61  Point-of-Service [POS] Data.....: ******************************
   DE48 String tamanho de 999 LLL
   DE49 Numerico tamanho de 3 fixo
   DE61 String tamanho de 999 LLL
-  
+  ```
   Para conseguir o envio de transaçoes parceladas, crediario, consulta, o DE48 precisa ser enviado na estrutura que desenhei, ainda a ser melhor detalhado na documentaçao que vou anexar futuramente.
   Exemplos de DE48
-  Compra a vista, DE03=003000, DE48=001008000000010020010003001F0210022202200200 ou 001008000000010020010003001F0210022202200201 
+  ```Compra a vista, DE03=003000, DE48=001008000000010020010003001F0210022202200200 ou 001008000000010020010003001F0210022202200201 
   Compra parcelada loja, DE03=003000,    DE48=001008000000010020010003001F0210022102200212 "os 2 ultimos digitos sao a quantidade de parcelas"
   Compra parcelada emissor, DE03=003000, DE48=001008000000010020010003001F0210022002200208 "os 2 ultimos digitos sao a quantidade de parcelas"
   Compra consulta de crediario, DE48=001008000000010020010003001 0210022502200212023012000000200000
   Compra compra crediario, DE48=001008000000010020010003001 0210022502200207 "os 2 ultimos digitos sao a quantidade de parcelas"
   Compra Maestro, DE03=002000, DE48=001008000000010020010003001F021002220220020002401400394460005887
-
+```
   Para tentar facilitar, deixei um programa que simula uma transacao de trilha 2 "com dados mocados" para executar, basta:
+  
     POS_asciiTarjaMOCv1 localhost:8082 1000 001008000000010020010003001F0210022202200200
     Sendo os parametros ip:porta valor DE48
 
@@ -179,7 +186,7 @@ F61  Point-of-Service [POS] Data.....: ******************************
 
   Se tudo ocorrer bem, você deve receber algo parecido com isso:
 
-F0   MTI....................................: 0210
+```F0   MTI....................................: 0210
 F2   PAN - CARTAO...........................: 5666****0000
 F3   CODIGO PROCESSAMENTO...................: 3000
 F4   VALOR DA TRANSACAO.....................: 1000
@@ -195,7 +202,8 @@ F60  DADOS COMPROVAMENTE DE VENDA CLINTE....: C@    DEBIT MASTERCARD - Via Clien
 F62  DADOS COMPROVAMENTE DE VENDA COMERCIO..: C@    DEBIT MASTERCARD - Via Cliente    @NINJASEC - TESTE111111 E            @RUA XXXX XXXXX C                 SP BR@CNPJ:01000000000100                   @TID: JUNI0SIM@EC:XXXXXXXXX@                    @VENDA CREDITO A VISTA                 @************0000   @18/10/24                         16:40@VALOR APROVADO:               R$ 10.00@CV:XXXXXXXXXXXX            AUTO:000000@DOC:000000@TERM:XXXXXXXX@@ MEDIANTE A ASSINATURA               
 F127 INDENTIFICADOR UNICO DO ADQUIRENTE.....: 164059805490
 
- FIM DO PROCESSAMENTO :) 
+ FIM DO PROCESSAMENTO :)
+```
 
 ## ✈️ Próximos Passos
 
