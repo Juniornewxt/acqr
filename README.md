@@ -180,6 +180,7 @@ F61  Point-of-Service [POS] Data.....: ******************************
   Para tentar facilitar, deixei um programa que simula uma transacao de trilha 2 "com dados mocados" para executar, basta:
   
     POS_asciiTarjaMOCv1 localhost:8082 1000 001008000000010020010003001F0210022202200200
+    
     Sendo os parametros ip:porta valor DE48
 
   **Se precisar de algo mais sofisticado, que testa varios tipos de transacoes com os dados via arquivo csv, me procure.**
