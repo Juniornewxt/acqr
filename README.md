@@ -1,7 +1,5 @@
 # Projeto ACQR
 
-![Projeto ACQR](assets/slogan_projeto_acqr.png)
-
 **Projeto ACQR** é um sistema em desenvolvimento para gerenciamento de adquirentes de cartão de crédito, totalmente implementado em Golang. O objetivo é criar uma solução completa para o processamento de transações, com suporte a múltiplas bandeiras de cartões como Visa, Mastercard, ELO, e outras.
 
 ## 🚧 Status do Projeto
