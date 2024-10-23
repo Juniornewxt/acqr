@@ -166,7 +166,9 @@ F61  Point-of-Service [POS] Data.....: ******************************
   DE49 Numerico tamanho de 3 fixo
   DE61 String tamanho de 999 LLL
   ```
-  Para conseguir o envio de transaçoes parceladas, crediario, consulta, o DE48 precisa ser enviado na estrutura que desenhei, ainda a ser melhor detalhado na documentaçao que vou anexar futuramente.
+  Para conseguir o envio de transaçoes parceladas, crediario, consulta, o DE48 precisa ser enviado na estrutura que desenhei. ainda a ser melhor detalhado na documentaçao que vou anexar futuramente.
+  DE52 E DE55, Sao necessarios para transacoes de chip ou contactless
+  
   Exemplos de DE48
   ```Compra a vista, DE03=003000, DE48=001008000000010020010003001F0210022202200200 ou 001008000000010020010003001F0210022202200201 
   Compra parcelada loja, DE03=003000,    DE48=001008000000010020010003001F0210022102200212 "os 2 ultimos digitos sao a quantidade de parcelas"
