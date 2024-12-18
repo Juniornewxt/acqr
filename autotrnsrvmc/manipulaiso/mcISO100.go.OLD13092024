@@ -1,0 +1,607 @@
+package manipulaiso
+
+import (
+
+	//"encoding/csv"
+
+	"bytes"
+	"fmt"
+	"log"
+	"os"
+	especificacao "projetoacqr/especificao"
+	"strings"
+	"time"
+
+	"github.com/moov-io/iso8583"
+	//"github.com/moov-io/iso8583/cmd/iso8583/describe"
+
+	//"github.com/moov-io/iso8583/specs"
+	"github.com/moov-io/iso8583/network"
+)
+
+func Mciso100(iso_padrao []byte) ([]byte, error) {
+
+	// 1 se renomeia a iso criada acima com pacote iso_padrao
+
+	//fmt.Println("PRINT DA FUNCAO MC", iso_padrao)
+
+	// Remove os primeiros 2 bytes
+	iso_padrao_mod := iso_padrao[2:]
+	// Trabalha com string sem os 2 primeiros bytes
+	retorno := string(iso_padrao_mod)
+
+	r_spec := especificacao.NewSpecASCII()
+
+	r_message := iso8583.NewMessage(r_spec)
+
+	r_message.Unpack([]byte((retorno)))
+
+	//log.Println("Mensagem Em ASCII:")
+
+	//iso8583.Describe(r_message, os.Stdout)
+
+	type Iso48Entrada struct {
+		VersaoTB           string `isoJUNIOR:"001"`
+		CargaDesatualizada string `isoJUNIOR:"002"`
+		Tcc                string `isoJUNIOR:"003"`
+		TipoParceleado     string `isoJUNIOR:"021"`
+		Parcelas           string `isoJUNIOR:"022"`
+	}
+
+	type ISOF55Data struct {
+		AC9F26                string `iso8583:"9F26"`
+		InfoCript9F27         string `iso8583:"9F27"`
+		IAD9F10               string `iso8583:"9F10"`
+		NumImprevi9F37        string `iso8583:"9F37"`
+		ContadorTrnApp9F36    string `iso8583:"9F36"`
+		TRV95                 string `iso8583:"95"`
+		DataTrn9A             string `iso8583:"9A"`
+		TipoTrn9C             string `iso8583:"9C"`
+		ValorAutoriz9F02      string `iso8583:"9F02"`
+		CodMoedaTrn5F2A       string `iso8583:"5F2A"`
+		PerfilIntercApp82     string `iso8583:"82"`
+		CodPaisTerm9F1A       string `iso8583:"9F1A"`
+		ResultCVM9F34         string `iso8583:"9F34"`
+		CapacidadeTermEUA9F33 string `iso8583:"9F33"`
+		NumDedicado84         string `iso8583:"84"`
+		OutroValor9F03        string `iso8583:"9F03"`
+		////opcionais abaixo
+		NumSeqPan5F34         string `iso8583:"5F34"`
+		DadoProprCadSelAp9F0A string `iso8583:"9F0A"`
+		TipoTerminal9F35      string `iso8583:"9F35"`
+		IDF9F1E               string `iso8583:"9F1E"`
+		CodCatgTrn9F53        string `iso8583:"9F53"`
+		NumVersaoApp9F09      string `iso8583:"9F09"`
+		ContadorSeqTrn9F41    string `iso8583:"9F41"`
+		//TermCapForaEUA9F33    string `iso8583:"9F33"`
+		DadosTerceiro9F6E string `iso8583:"9F6E"`
+	}
+
+	type ISO55dados struct {
+		AC9F26                string `isoJUNIOR:"9F26"`
+		InfoCript9F27         string `isoJUNIOR:"9F27"`
+		IAD9F10               string `isoJUNIOR:"9F10"`
+		NumImprevi9F37        string `isoJUNIOR:"9F37"`
+		ContadorTrnApp9F36    string `isoJUNIOR:"9F36"`
+		TRV95                 string `isoJUNIOR:"95"`
+		DataTrn9A             string `isoJUNIOR:"9A"`
+		TipoTrn9C             string `isoJUNIOR:"9C"`
+		ValorAutoriz9F02      string `isoJUNIOR:"9F02"`
+		CodMoedaTrn5F2A       string `isoJUNIOR:"5F2A"`
+		PerfilIntercApp82     string `isoJUNIOR:"82"`
+		CodPaisTerm9F1A       string `isoJUNIOR:"9F1A"`
+		ResultCVM9F34         string `isoJUNIOR:"9F34"`
+		CapacidadeTermEUA9F33 string `isoJUNIOR:"9F33"`
+		NumDedicado84         string `isoJUNIOR:"84"`
+		OutroValor9F03        string `isoJUNIOR:"9F03"`
+		////opcionais abaixo
+		NumSeqPan5F34         string `isoJUNIOR:"5F34"`
+		DadoProprCadSelAp9F0A string `isoJUNIOR:"9F0A"`
+		TipoTerminal9F35      string `isoJUNIOR:"9F35"`
+		IDF9F1E               string `isoJUNIOR:"9F1E"`
+		CodCatgTrn9F53        string `isoJUNIOR:"9F53"`
+		NumVersaoApp9F09      string `isoJUNIOR:"9F09"`
+		ContadorSeqTrn9F41    string `isoJUNIOR:"9F41"`
+		//TermCapForaEUA9F33    string `isoJUNIOR:"9F33"`
+		DadosTerceiro9F6E string `isoJUNIOR:"9F6E"`
+	}
+
+	//type ISOF55Data2 struct {
+	//	Campo1 string `iso8583:"9F26"`
+	//	Campo2 string `iso8583:"9F27"`
+	//}
+
+	type SolicitacaoAutorizacao2 struct {
+		MTI               string      `iso8583:"0"`
+		PAN               string      `iso8583:"2"`
+		ProcCod           string      `iso8583:"3"`
+		Valor             string      `iso8583:"4"`
+		DataHoraTransacao string      `iso8583:"7"`
+		STAN              string      `iso8583:"11"`
+		Hhmmss            string      `iso8583:"12"`
+		Mmdd              string      `iso8583:"13"`
+		Validade          string      `iso8583:"14"`
+		Mcc               string      `iso8583:"18"`
+		EntryMode         string      `iso8583:"22"`
+		SeqCardNum        string      `iso8583:"23"`
+		Adquirente        string      `iso8583:"32"`
+		CodInstiRemetente string      `iso8583:"33"`
+		Trilha2           string      `iso8583:"35"`
+		Nsu               string      `iso8583:"37"`
+		Terminal          string      `iso8583:"41"`
+		CodComercio       string      `iso8583:"42"`
+		NomeEndereco      string      `iso8583:"43"`
+		InfoAdd           string      `iso8583:"48"`
+		Moeda             string      `iso8583:"49"`
+		Pin               string      `iso8583:"52"`
+		DadosChip         *ISOF55Data `iso8583:"55"`
+		//DadosChip     string `iso8583:"55"`
+		DadosPOS      string `iso8583:"61"`
+		DadosRegistro string `iso8583:"120"`
+		DadosPrivados string `iso8583:"126"`
+	}
+
+	//iso55, err := r_message.GetString(55)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Println("PRINT DO 55", iso55)
+	// Envia para funçao que lida com dados no formato TLV para manipulacao
+	//tlv55Manipulado, err := especificacao.LeDE55BerTLV(iso55)
+	//if err != nil {
+	//	fmt.Println("Erro:", err)
+	//return
+	//}
+	//fmt.Println("De55 manipulado", tlv55Manipulado)
+
+	// Estrutura do DE 61
+	type IsoDe61ret struct {
+		DadosAplicao01    string `isoJUNIOR:"001"`
+		NumSeriePinpad02  string `isoJUNIOR:"002"`
+		DadosBandeira03   string `isoJUNIOR:"003"`
+		VersaoAplicacao04 string `isoJUNIOR:"004"`
+		FabricaPinpad05   string `isoJUNIOR:"005"`
+		HardwareVersao06  string `isoJUNIOR:"006"`
+		FirmwarePinpad07  string `isoJUNIOR:"007"`
+	}
+	// Estrutura do subcampos DE 61 03
+	type IsoDe61sub03ret struct {
+		POSta01          string `dado:"1" tamanho:"1"`
+		Reserv02         string `dado:"2" tamanho:"1"`
+		POStl03          string `dado:"3" tamanho:"1"`
+		POSchPresent04   string `dado:"4" tamanho:"1"`
+		POScardPresent05 string `dado:"5" tamanho:"1"`
+		POScardCapCap06  string `dado:"6" tamanho:"1"`
+		POStrnStatus07   string `dado:"7" tamanho:"1"`
+		POStrnSecur08    string `dado:"8" tamanho:"1"`
+		Reserv09         string `dado:"9" tamanho:"1"`
+		POSCat10         string `dado:"10" tamanho:"1"`
+		POSIputCap11     string `dado:"11" tamanho:"1"`
+		POSliveCycle12   string `dado:"12" tamanho:"2"`
+		POScodPais13     string `dado:"12" tamanho:"3"`
+		POScodPostal14   string `dado:"14" tamanho:"10"`
+	}
+
+	iso48ent, err := r_message.GetString(48)
+	if err != nil {
+		fmt.Println("Erro:", err)
+	}
+
+	// Envia para funçao que lida com dados no formato TLV para manipulacao
+	tlvManipu48ent, err := especificacao.LeTLVASCII(iso48ent)
+	if err != nil {
+		fmt.Println("Erro:", err)
+		//return
+	}
+	// Criar uma instância da estrutura
+	var Iso48EntrManip Iso48Entrada
+
+	// Preenche a estrutura com os dados TLV
+	err = especificacao.EstruturaTLV(tlvManipu48ent, &Iso48EntrManip)
+	if err != nil {
+		fmt.Println("Erro:", err)
+		//return
+	}
+
+	iso55, err := r_message.GetString(55)
+	if err != nil {
+		panic(err)
+	}
+	//fmt.Println("PRINT DO 55", iso55)
+
+	var objetosISO55 ISO55dados
+	manipulaISO55, err := especificacao.LeBerTLV55(iso55, &objetosISO55)
+	if err != nil {
+		fmt.Println("Erro:", err)
+		//} else {
+		//fmt.Printf("Resultado: %+v\n", manipulaISO55)
+	}
+
+	// Criar uma instância da estrutura
+	var ISO55Manipulada ISO55dados
+
+	// Preenche a estrutura com os dados TLV
+	err = especificacao.EstruturaTLV(manipulaISO55, &ISO55Manipulada)
+	if err != nil {
+		fmt.Println("Erro:", err)
+		//return
+	}
+	//fmt.Println("PRINT DO 55 CAPTURADO", ISO55Manipulada.AC9F26)
+
+	iso61, err := r_message.GetString(61)
+	if err != nil {
+		panic(err)
+	}
+
+	// Envia para funçao que lida com dados no formato TLV para manipulacao
+	tlvManipulado, err := especificacao.LeTLVASCII(iso61)
+	if err != nil {
+		fmt.Println("Erro:", err)
+		//return
+	}
+	//fmt.Println("RETORNO DO TLF DI 61", tlvManipulado)
+	// Criar uma instância da estrutura
+	var isoData61 IsoDe61ret
+	// Criar uma instância da estrutura
+	var isoDatasub61 IsoDe61sub03ret
+
+	// Preenche a estrutura com os dados TLV
+	err = especificacao.EstruturaTLV(tlvManipulado, &isoData61)
+	if err != nil {
+		fmt.Println("Erro:", err)
+		//return
+	}
+	// Preenche a estrutura os dados enviado somemte o campo que queremos
+	err = especificacao.EstruturaDados(isoData61.DadosBandeira03, &isoDatasub61)
+	if err != nil {
+		fmt.Println("Erro:", err)
+		//return
+	}
+	recebido := &SolicitacaoAutorizacao2{}
+	err = r_message.Unmarshal(recebido)
+	//fmt.Println("TESTE DO QUE RECEBEU PARA BANDEIRA 1 ", recebido.DadosChip.AC9F26)
+	//fmt.Println("TESTE DO QUE RECEBEU PARA BANDEIRA TUDO", recebido)
+
+	b, err := r_message.Pack()
+	if err != nil {
+		panic(err)
+
+	}
+	//fmt.Println("QUE VEIO DA ISO 61", IsoDe61ret{DadosAplicao01: ""})
+	log.Printf("MENSAGEM RECEBIDA:\n")
+	log.Printf("% x\n", b)
+	log.Printf("MENSAGEM ABERTA ASCII:\n")
+	iso8583.Describe(r_message, os.Stdout)
+
+	// Inicia a criação da spec nova para que não se repita os dados da ISO original, salve quando solicitado r_message
+	type IsoDe48sub struct {
+		//MerchantName1        string `iso8583:"01"`
+		MerchantCategoryCode string `iso8583:"14"`
+		//Sub48_22i            *De48sub22 `iso8583:"22"`
+		Sub48_22i          string `iso8583:"22"`
+		MerchantPostalCode string `iso8583:"74"`
+		MerchantWebsite    string `iso8583:"80"`
+		Ard                string `iso8583:"91"`
+		InfoParcelado      string `iso8583:"95"`
+	}
+	type IsoDe48 struct {
+		TCC          string      `iso8583:"00"`
+		CompsicaoTCC *IsoDe48sub `iso8583:"01"`
+		//InfoParcelado string      `iso8583:"95"`
+	}
+	type IsoDe61 struct {
+		POSta01          string `iso8583:"01"`
+		Reserv02         string `iso8583:"02"`
+		POStl03          string `iso8583:"03"`
+		POSchPresent04   string `iso8583:"04"`
+		POScardPresent05 string `iso8583:"05"`
+		POScardCapCap06  string `iso8583:"06"`
+		POStrnStatus07   string `iso8583:"07"`
+		POStrnSecur08    string `iso8583:"08"`
+		Reserv09         string `iso8583:"09"`
+		POSCat10         string `iso8583:"10"`
+		POSIputCap11     string `iso8583:"11"`
+		POSliveCycle12   string `iso8583:"12"`
+		POScodPais13     string `iso8583:"13"`
+		POScodPostal14   string `iso8583:"14"`
+	}
+	type SolicitacaoAutorizacao struct {
+		MTI               string      `iso8583:"0"`
+		PAN               string      `iso8583:"2"`
+		ProcCod           string      `iso8583:"3"`
+		Valor             string      `iso8583:"4"`
+		DataHoraTransacao string      `iso8583:"7"`
+		STAN              string      `iso8583:"11"`
+		Hhmmss            string      `iso8583:"12"`
+		Mmdd              string      `iso8583:"13"`
+		Validade          string      `iso8583:"14"`
+		Mcc               string      `iso8583:"18"`
+		EntryMode         string      `iso8583:"22"`
+		SeqCardNum        string      `iso8583:"23"`
+		Adquirente        string      `iso8583:"32"`
+		CodInstiRemetente string      `iso8583:"33"`
+		Trilha2           string      `iso8583:"35"`
+		Nsu               string      `iso8583:"37"`
+		Terminal          string      `iso8583:"41"`
+		CodComercio       string      `iso8583:"42"`
+		NomeEndereco      string      `iso8583:"43"`
+		InfoAdd           *IsoDe48    `iso8583:"48"`
+		Moeda             string      `iso8583:"49"`
+		Pin               string      `iso8583:"52"`
+		DadosChip         *ISOF55Data `iso8583:"55"`
+		DadosPOS          *IsoDe61    `iso8583:"61"`
+		DadosADDParcelado string      `iso8583:"112"`
+		DadosRegistro     string      `iso8583:"120"`
+		DadosPrivados     string      `iso8583:"126"`
+	}
+
+	new_spec := especificacao.NewSpecEBCDIC()
+
+	new_message := iso8583.NewMessage(new_spec)
+
+	r_message.Unpack(b) //Abre a ISO formatada no inicio para ser usada somente de alguns campos
+
+	cartao, err := r_message.GetString(35)
+	if err != nil {
+		panic(err)
+	}
+	//Abre o DE 35, le ate = para encontrar o numero do cartão
+	var num_cartao string
+	for _, procura_cartao := range cartao {
+		if procura_cartao == '=' || procura_cartao == 'D' || procura_cartao == 'C' {
+			break
+		}
+		num_cartao += string(procura_cartao)
+	}
+	//fmt.Println("CARTAO antes do EBCDIC", num_cartao)
+
+	proccod, err := r_message.GetString(3)
+	if err != nil {
+		panic(err)
+	}
+
+	valor, err := r_message.GetString(4)
+	if err != nil {
+		panic(err)
+	}
+	mmddhhmmss, err := r_message.GetString(7)
+	if err != nil {
+		panic(err)
+	}
+	//new_message.Field(7, mmddhhmmss) //data e hora mmddhhmmss
+	sy_trace, err := r_message.GetString(11)
+	if err != nil {
+		panic(err)
+	}
+	//new_message.Field(11, sy_trace)
+	hhmmss, err := r_message.GetString(12)
+	if err != nil {
+		panic(err)
+	}
+	//new_message.Field(12, hhmmss) //hhmmss
+	mmdd, err := r_message.GetString(13)
+	if err != nil {
+		panic(err)
+	}
+	//new_message.Field(13, mmdd) //mmdd
+	validade, err := r_message.GetString(14)
+	if err != nil {
+		panic(err)
+	}
+	//new_message.Field(14, validade) //validade do cartao
+	mcc, err := r_message.GetString(18)
+	if err != nil {
+		panic(err)
+	}
+	//new_message.Field(18, mcc) //mcc
+	entrymode, err := r_message.GetString(22)
+	if err != nil {
+		panic(err)
+	}
+	sequencecard, err := r_message.GetString(23)
+	if err != nil {
+		panic(err)
+	}
+	//new_message.Field(22, entrymode) //entry mode
+	trilha2, err := r_message.GetString(35)
+	if err != nil {
+		panic(err)
+	}
+	//new_message.Field(35, trilha2) // trilha 2 cartao/ identificador/ validade/ cvv
+	data := time.Now()
+	//new_message.Field(37, strings.Replace((data.Format(("150405.000000"))), ".", "", -1))
+	tid, err := r_message.GetString(41)
+	if err != nil {
+		panic(err)
+	}
+	//new_message.Field(41, tid) //terminal
+	mid, err := r_message.GetString(42)
+	if err != nil {
+		panic(err)
+	}
+	//new_message.Field(42, mid) //cod comercio
+	//new_message.Field(43, "POSTO DM JR            DIADEMA  EVANG076")
+	moeda, err := r_message.GetString(49)
+	if err != nil {
+		panic(err)
+	}
+	acqr, err := r_message.GetString(32)
+	if err != nil {
+		panic(err)
+	}
+	acqrremente, err := r_message.GetString(33)
+	if err != nil {
+		panic(err)
+	}
+	endereco, err := r_message.GetString(43)
+	if err != nil {
+		panic(err)
+	}
+	pedidoautoriza := &SolicitacaoAutorizacao{} //Absorve a estrutura do SolicitacaoAutorizacao para o pedidoautoriza
+	pedidoautoriza.MTI = "0100"
+	pedidoautoriza.PAN = num_cartao
+	pedidoautoriza.ProcCod = proccod
+	pedidoautoriza.Valor = valor
+	pedidoautoriza.DataHoraTransacao = mmddhhmmss
+	pedidoautoriza.STAN = sy_trace
+	pedidoautoriza.Hhmmss = hhmmss
+	pedidoautoriza.Mmdd = mmdd
+	pedidoautoriza.Validade = validade
+	pedidoautoriza.Mcc = mcc
+	pedidoautoriza.EntryMode = entrymode
+	if entrymode == "51" || entrymode == "71" { //ou 51 ou 71, fora esses nao vai o DE23
+		pedidoautoriza.SeqCardNum = sequencecard
+	}
+	//pedidoautoriza.Adquirente = "00000000025"
+	pedidoautoriza.Adquirente = acqr
+	//pedidoautoriza.CodInstiRemetente = "0026"
+	pedidoautoriza.CodInstiRemetente = acqrremente
+	pedidoautoriza.Trilha2 = trilha2
+	pedidoautoriza.Nsu = (strings.Replace((data.Format(("150405.000000"))), ".", "", -1))
+	pedidoautoriza.Terminal = tid
+	pedidoautoriza.CodComercio = mid
+	//pedidoautoriza.NomeEndereco = "POSTO DM JR            DIADEMA  EVANG076"
+	pedidoautoriza.NomeEndereco = endereco
+
+	// Verificar se tem dados para transaçao parcelada
+	var TemParcelamento string
+	var Parcelamento string
+	var ParcelISO112 string
+	var TipoParcelado48 string
+	if Iso48EntrManip.Parcelas == "" || Iso48EntrManip.Parcelas == "00" || Iso48EntrManip.Parcelas == "01" {
+		TemParcelamento = ""
+		Parcelamento = ""
+	} else {
+		TipoParcelado48 = Iso48EntrManip.TipoParceleado
+		TemParcelamento = Iso48EntrManip.Parcelas
+		Parcelamento = "PARCEL"
+		ParcelISO112 = "021003" + TipoParcelado48 + "B0220030" + TemParcelamento
+	}
+
+	pedidoautoriza.InfoAdd = &IsoDe48{
+		//TCC: "F",
+		TCC: Iso48EntrManip.Tcc,
+		CompsicaoTCC: &IsoDe48sub{
+			//MerchantCategoryCode=" ",
+			//Sub48_22i=&De48sub22{
+			//Sub48_22="0000",
+			//Sub48_22i="0000000000000000000000000000000000",
+			//},
+			//MerchantPostalCode="50C",
+			//MerchantWebsite=   "TV",
+			//Ard=               "111111111111111",
+			InfoParcelado: Parcelamento,
+		},
+		//InfoParcelado: "PARCEL",
+	}
+	pedidoautoriza.Moeda = moeda
+	if entrymode == "51" || entrymode == "21" { //ou 51 ou 21
+		pedidoautoriza.Pin = "FEE8CA6A"
+	}
+
+	//pedidoautoriza.Pin = recebido.Pin
+	if entrymode == "51" || entrymode == "71" {
+
+		// 9F03 Usado para cashback, se vier nulo preencher com zero.
+		var ModOutroValor9F03 string
+		if ISO55Manipulada.OutroValor9F03 == "" {
+			ModOutroValor9F03 = "000000000000"
+		} else {
+			ModOutroValor9F03 = ISO55Manipulada.OutroValor9F03
+		}
+
+		pedidoautoriza.DadosChip = &ISOF55Data{
+			//TransactionDate: "210720",
+			//Amount:          "000000000501",
+			AC9F26:                ISO55Manipulada.AC9F26,                //9F26
+			InfoCript9F27:         ISO55Manipulada.InfoCript9F27,         //9F27
+			IAD9F10:               ISO55Manipulada.IAD9F10,               //9F10
+			NumImprevi9F37:        ISO55Manipulada.NumImprevi9F37,        //9F37
+			ContadorTrnApp9F36:    ISO55Manipulada.ContadorTrnApp9F36,    //9F36
+			TRV95:                 ISO55Manipulada.TRV95,                 //95
+			DataTrn9A:             ISO55Manipulada.DataTrn9A,             //9A
+			TipoTrn9C:             ISO55Manipulada.TipoTrn9C,             //9C
+			ValorAutoriz9F02:      ISO55Manipulada.ValorAutoriz9F02,      //9F02
+			CodMoedaTrn5F2A:       ISO55Manipulada.CodMoedaTrn5F2A,       //5F2A
+			PerfilIntercApp82:     ISO55Manipulada.PerfilIntercApp82,     //82
+			CodPaisTerm9F1A:       ISO55Manipulada.CodPaisTerm9F1A,       //9F1A
+			ResultCVM9F34:         ISO55Manipulada.ResultCVM9F34,         //9F34
+			CapacidadeTermEUA9F33: ISO55Manipulada.CapacidadeTermEUA9F33, //9F33
+			NumDedicado84:         ISO55Manipulada.NumDedicado84,         //84
+			//OutroValor9F03:        ISO55Manipulada.OutroValor9F03,        //9F03
+			OutroValor9F03: ModOutroValor9F03,
+			////opcionais abaixo  :ISO55Manipulada.////opcionais abaixo , //
+			NumSeqPan5F34:         ISO55Manipulada.NumSeqPan5F34,         //5F34
+			DadoProprCadSelAp9F0A: ISO55Manipulada.DadoProprCadSelAp9F0A, //9F0A
+			TipoTerminal9F35:      ISO55Manipulada.TipoTerminal9F35,      //9F35
+			IDF9F1E:               ISO55Manipulada.IDF9F1E,               //9F1E
+			CodCatgTrn9F53:        ISO55Manipulada.CodCatgTrn9F53,        //9F53
+			NumVersaoApp9F09:      ISO55Manipulada.NumVersaoApp9F09,      //9F09
+			ContadorSeqTrn9F41:    ISO55Manipulada.ContadorSeqTrn9F41,    //9F41
+			//TermCapForaEUA9F33  :ISO55Manipulada.//TermCapForaEUA9F33 , //9F33
+			DadosTerceiro9F6E: ISO55Manipulada.DadosTerceiro9F6E, //9F6E
+		}
+	}
+	//pedidoautoriza.DadosPOS = posdata
+	pedidoautoriza.DadosPOS = &IsoDe61{
+		POSta01:          isoDatasub61.POSta01,
+		Reserv02:         isoDatasub61.Reserv02,
+		POStl03:          isoDatasub61.POStl03,
+		POSchPresent04:   isoDatasub61.POSchPresent04,
+		POScardPresent05: isoDatasub61.POScardPresent05,
+		POScardCapCap06:  isoDatasub61.POScardCapCap06,
+		POStrnStatus07:   isoDatasub61.POStrnStatus07,
+		POStrnSecur08:    isoDatasub61.POStrnSecur08,
+		Reserv09:         isoDatasub61.Reserv09,
+		POSCat10:         isoDatasub61.POSCat10,
+		POSIputCap11:     isoDatasub61.POSIputCap11,
+		POSliveCycle12:   isoDatasub61.POSliveCycle12,
+		POScodPais13:     isoDatasub61.POScodPais13,
+		POScodPostal14:   isoDatasub61.POScodPostal14,
+	}
+	pedidoautoriza.DadosADDParcelado = ParcelISO112
+	//pedidoautoriza.DadosRegistro = De120
+	//pedidoautoriza.DadosPrivados = De126
+
+	err = new_message.Marshal(pedidoautoriza)
+	//fmt.Println("CARTAO EBCDIC", pedidoautoriza.PAN)
+	//fmt.Println("9A recebido", recebido.DadosChip.DataTrn9A)
+	//fmt.Println("9A enviado", recebido.DadosChip.DataTrn9A)
+	//fmt.Println("TESTE DO QUE VAI PARA BANDEIRA ", pedidoautoriza)
+
+	d, err := new_message.Pack()
+	if err != nil {
+		panic(err)
+
+	}
+
+	// 1 se renomeia a iso criada acima com pacote b
+	packed := d
+
+	// 2 se criar o cabeçalho binario 2 byts
+	header := network.NewBinary2BytesHeader()
+	//header := network.NewASCII4BytesHeader()
+	header.SetLength(len(packed))
+
+	// 3 se criar o tpdu ELO
+	//tpdu := []byte("60 00 06 00 00")
+
+	// 4 - combinar tudo o que temos em um buf
+
+	var buf bytes.Buffer
+
+	header.WriteTo(&buf)
+	//_, err = buf.Write(tpdu)
+	_, err = buf.Write(packed)
+	//_, err = Write(buf.Bytes())
+	log.Printf("MENSAGEM ABERTA EBCDIC:\n")
+	log.Printf("% x\n", packed)
+	iso8583.Describe(new_message, os.Stdout)
+	fmt.Println()
+	log.Printf("FIM DO PROCESSAMENTO :) \n")
+	//fmt.Println("Pressione 'Enter' para sair...")
+	//fmt.Scanln()
+	//conn.Close()
+	log.Println("MENSAGEM EBCDIC FORMATADA PARA SER ENVIADA AO SERVIDOR:", buf.Bytes())
+	return buf.Bytes(), err
+}

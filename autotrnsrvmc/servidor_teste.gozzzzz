@@ -1,0 +1,70 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"net"
+	"os"
+	"strings"
+)
+
+func main() {
+
+	fmt.Println("Servidor aguardando conexões...")
+
+	// ouvindo na porta 8081 via protocolo tcp/ip
+
+	ln, erro1 := net.Listen("tcp", ":8081")
+	if erro1 != nil {
+		fmt.Println(erro1)
+		os.Exit(1)
+	}
+
+	defer ln.Close()
+
+	// rodando loop contínuo (até que ctrl-c seja acionado)
+	for {
+		// aceitando conexões
+		conexao, erro2 := ln.Accept()
+		if erro2 != nil {
+			fmt.Println(erro2)
+			continue // continua esperando por outras conexões
+		}
+
+		fmt.Println("Conexão aceita...")
+
+		go handleConnection(conexao)
+	}
+}
+
+func handleConnection(conexao net.Conn) {
+	defer conexao.Close()
+
+	// criando um scanner para ler as linhas da conexão
+	scanner := bufio.NewScanner(conexao)
+
+	// rodando loop contínuo para lidar com as mensagens recebidas
+	for scanner.Scan() {
+		// lê a linha atual
+		// assim ele le esperando qualquer caractere de fim de linha (\n, \r\n, ou \r)
+		mensagem := scanner.Text()
+
+		// escreve no terminal a mensagem recebida
+		fmt.Println("Mensagem recebida:", mensagem+"\n")
+
+		// para um exemplo simples de processamento, converte a mensagem recebida para caixa alta
+		novamensagem := strings.ToUpper(mensagem)
+
+		// adiciona uma quebra de linha à mensagem para o envio
+		//novamensagem += "\n"
+
+		// envia a nova mensagem de volta para o cliente
+		conexao.Write([]byte(novamensagem))
+		// escreve no terminal a mensagem enviada
+		fmt.Println("Mensagem enviada:", novamensagem+"\n")
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Erro ao ler:", err)
+	}
+}

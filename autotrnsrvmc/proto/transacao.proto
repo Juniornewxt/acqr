@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package transacao;
+
+option go_package = "/proto;transacao";
+
+message TransacaoRequest {
+    string MTI = 1;  // "0200", que seria o MTI (Message Type Indicator)
+    string DE02 = 2; // PAN (Primary Account Number)
+    string DE03 = 3; // Código de processamento
+    string DE04 = 4; // Valor da transação
+    string DE07 = 5; // Data e hora no formato MMDDhhmmss
+    string DE11 = 6; // Número de sistema (trace number)
+    string DE12 = 7; // Hora local (hhmmss)
+    string DE13 = 8; // Data local (MMDD)
+    string DE14 = 9; // Validade do cartão
+    string DE18 = 10; // MCC (Merchant Category Code)
+    string DE19 = 11; // País
+    string DE22 = 12; // Modo de entrada (entry mode)
+    string DE23 = 13; // Código de identificação de aplicação
+    string DE32 = 14; // Código de identificador do adquirente
+    string DE33 = 15; // Forwarding Institution ID Code
+    string DE35 = 16; // Trilha 2 do cartão (track 2)
+    string DE38 = 17; // CODIGO DE AUTORIZACAO
+    string DE39 = 18; // CODIGO RESPOSTA
+    string DE41 = 19; // Terminal ID
+    string DE42 = 20; // Merchant ID (ID do comércio)
+    string DE43 = 21; // Nome e localização do comerciante
+    string DE48 = 22; // Dados adicionais (campo 48)
+    string DE49 = 23; // Código da moeda
+    string DE52 = 24; // Senha (PIN Data)
+    string DE55 = 25; // EMV Data (campo 55)
+    string DE61 = 26; // Dados adicionais (campo 61)
+    string DE120 = 27; // Dados adicionais (campo 120)
+    string DE126 = 28; // Dados adicionais (campo 126)
+}
+
+message TransacaoResponse {
+    string response_code = 1;
+    string message = 2;
+}
+
+service TransacaoService {
+    rpc ProcessTransacao(TransacaoRequest) returns (TransacaoResponse);
+}
